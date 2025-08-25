@@ -9,6 +9,10 @@ from dotenv import load_dotenv
 import os
 import requests
 from io import StringIO
+import streamlit as st
+from openai import OpenAI
+
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # Page configuration
 st.set_page_config(
@@ -690,4 +694,5 @@ else:
     - Regular health check-ups
     - Enjoy your food and stay hydrated
     """)
+
 
