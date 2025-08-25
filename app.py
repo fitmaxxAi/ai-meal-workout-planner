@@ -94,7 +94,6 @@ def save_user_data():
     with open('user_data.json', 'w') as f:
         json.dump(data_to_save, f)
 
-# --- AI-Powered Meal Generation ---
 def generate_ai_meal(meal_type, calories, protein, carbs, fat, goal_type, health_condition):
     """
     Uses OpenAI's API to generate a creative meal idea based on parameters.
@@ -110,27 +109,37 @@ def generate_ai_meal(meal_type, calories, protein, carbs, fat, goal_type, health
 
     Example: 'Mediterranean Chickpea Salad: Fresh chickpeas with cucumber, cherry tomatoes, feta cheese, kalamata olives, and a lemon-oregano vinaigrette.'
     """
+    
     try:
-        # Check if the API key is configured
-        if not openai.api_key:
-            st.error("OpenAI API key not configured. Using template meals.")
-            return f"Template {meal_type} Meal"
-            
-        # Call the OpenAI API
-        response = openai.ChatCompletion.create(
+        # Use the client from session state (modern approach)
+        client = st.session_state.openai_client
+        
+        # Call the OpenAI API with the new syntax
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=75,
             temperature=0.8
         )
-        return response.choices[0].message['content'].strip()
+        return response.choices[0].message.content.strip()
+        
     except openai.AuthenticationError:
-        st.error("Invalid OpenAI API key. Check your secrets.toml or .env file.")
-        return f"Template {meal_type} Meal"
+        st.error("❌ Invalid OpenAI API key. Check your secrets.toml file.")
+        return get_default_meal(meal_type)
     except Exception as e:
-        st.error(f"An error occurred with AI generation: {e}")
-        return f"Template {meal_type} Meal"
+        st.error(f"⚠️ An error occurred with AI generation: {e}")
+        return get_default_meal(meal_type)
 
+def get_default_meal(meal_type):
+    """Fallback meals if AI generation fails"""
+    default_meals = {
+        "breakfast": "Oatmeal with Berries: Classic oatmeal topped with fresh berries and nuts (350 cal, 12g protein)",
+        "lunch": "Grilled Chicken Salad: Mixed greens with grilled chicken and vinaigrette (450 cal, 35g protein)", 
+        "dinner": "Baked Salmon with Vegetables: Salmon fillet with steamed broccoli and quinoa (500 cal, 40g protein)",
+        "snack": "Greek Yogurt with Honey: Protein-rich yogurt with a touch of honey (200 cal, 15g protein)"
+    }
+    return default_meals.get(meal_type, "Healthy Balanced Meal")
+    
 # Custom CSS for modern UI
 st.markdown("""
 <style>
@@ -694,6 +703,7 @@ else:
     - Regular health check-ups
     - Enjoy your food and stay hydrated
     """)
+
 
 
 
