@@ -27,7 +27,7 @@ def load_meals_from_github():
     """Loads meal data from a GitHub CSV file."""
     try:
         # Replace with your actual GitHub CSV URL
-        github_csv_url = "https://raw.github.com/fitmaxxAi/ai-meal-workout-planner/blob/main/meals.csv"
+        github_csv_url = "https://github.com/fitmaxxAi/ai-meal-workout-planner/blob/main/meals.csv"
         response = requests.get(github_csv_url)
         response.raise_for_status()  # Check for request errors
         
@@ -694,4 +694,5 @@ else:
     - Regular health check-ups
     - Enjoy your food and stay hydrated
     """)
+
 
