@@ -12,6 +12,18 @@ from io import StringIO
 import streamlit as st
 from openai import OpenAI
 
+# Initialize OpenAI client (add this after imports)
+if "openai_client" not in st.session_state:
+    try:
+        from openai import OpenAI
+        st.session_state.openai_client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+    except KeyError:
+        st.error("❌ OPENAI_API_KEY not found in secrets. Please check your secrets.toml file")
+        st.stop()
+    except Exception as e:
+        st.error(f"❌ Failed to initialize OpenAI client: {e}")
+        st.stop()
+
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # Page configuration
@@ -703,6 +715,7 @@ else:
     - Regular health check-ups
     - Enjoy your food and stay hydrated
     """)
+
 
 
 
