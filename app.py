@@ -27,23 +27,23 @@ def load_meals_from_github():
     """Loads meal data from a GitHub CSV file."""
     try:
         # Replace with your actual GitHub CSV URL
-        github_csv_url = "https://raw.github.com/fitmaxxAi/ai-meal-workout-planner/blob/main/meals.csv"
+        github_csv_url = "https://github.com/fitmaxxAi/ai-meal-workout-planner/blob/main/meals.csv"
         response = requests.get(github_csv_url)
         response.raise_for_status()  # Check for request errors
         
-      # Read CSV data
-meals_df = pd.read_csv(StringIO(response.text), sep=",", on_bad_lines="skip")
-
-# Convert to dictionary format for easier use
-meal_templates = {}
-for goal in meals_df['goal_type'].unique():
-    goal_meals = meals_df[meals_df['goal_type'] == goal]
-    meal_templates[goal] = {
-        'Breakfast': goal_meals[goal_meals['meal_type'] == 'Breakfast']['meal_name'].iloc[0],
-        'Lunch': goal_meals[goal_meals['meal_type'] == 'Lunch']['meal_name'].iloc[0],
-        'Dinner': goal_meals[goal_meals['meal_type'] == 'Dinner']['meal_name'].iloc[0],
-        'Snack': goal_meals[goal_meals['meal_type'] == 'Snack']['meal_name'].iloc[0]
-    }
+        # Read CSV data
+        meals_df = pd.read_csv(StringIO(response.text))
+        
+        # Convert to dictionary format for easier use
+        meal_templates = {}
+        for goal in meals_df['goal_type'].unique():
+            goal_meals = meals_df[meals_df['goal_type'] == goal]
+            meal_templates[goal] = {
+                'Breakfast': goal_meals[goal_meals['meal_type'] == 'Breakfast']['meal_name'].iloc[0],
+                'Lunch': goal_meals[goal_meals['meal_type'] == 'Lunch']['meal_name'].iloc[0],
+                'Dinner': goal_meals[goal_meals['meal_type'] == 'Dinner']['meal_name'].iloc[0],
+                'Snack': goal_meals[goal_meals['meal_type'] == 'Snack']['meal_name'].iloc[0]
+            }
         
         return meal_templates
     except Exception as e:
@@ -694,16 +694,4 @@ else:
     - Regular health check-ups
     - Enjoy your food and stay hydrated
     """)
-
-
-
-
-
-
-
-
-
-
-
-
 
