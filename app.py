@@ -12,7 +12,7 @@ from io import StringIO
 
 # Page configuration
 st.set_page_config(
-    page_title="FitMaxx AI Planner",
+    page_title="FitMaxx AI ",
     page_icon="💪",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -690,6 +690,7 @@ else:
     - Regular health check-ups
     - Enjoy your food and stay hydrated
     """)
+
 
 
 
