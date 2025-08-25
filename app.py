@@ -12,7 +12,7 @@ from io import StringIO
 
 # Page configuration
 st.set_page_config(
-    page_title="FitMaxx AI ",
+    page_title="FitMaxx AI Planner",
     page_icon="💪",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -23,7 +23,7 @@ def load_meals_from_github():
     """Loads meal data from a GitHub CSV file."""
     try:
         # Replace with your actual GitHub CSV URL
-        github_csv_url = "https://github.com/fitmaxxAi/ai-meal-workout-planner/blob/main/meals.csv"
+        github_csv_url = "https://raw.githubusercontent.com/yourusername/yourrepo/main/meals.csv"
         response = requests.get(github_csv_url)
         response.raise_for_status()  # Check for request errors
         
@@ -32,8 +32,8 @@ def load_meals_from_github():
         
         # Convert to dictionary format for easier use
         meal_templates = {}
-        for goal in meals.csv_df['goal_type'].unique():
-            goal_meals = meals.csv_df[meals_df['goal_type'] == goal]
+        for goal in meals_df['goal_type'].unique():
+            goal_meals = meals_df[meals_df['goal_type'] == goal]
             meal_templates[goal] = {
                 'Breakfast': goal_meals[goal_meals['meal_type'] == 'Breakfast']['meal_name'].iloc[0],
                 'Lunch': goal_meals[goal_meals['meal_type'] == 'Lunch']['meal_name'].iloc[0],
@@ -423,7 +423,7 @@ def generate_exercises(workout_type):
     return exercises_db.get(workout_type, ['Custom exercises based on your level'])
 
 # Main app layout
-st.markdown('<div class="main-header">Fitmaxx AI</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">💪 FitLife AI Planner</div>', unsafe_allow_html=True)
 st.markdown(f'<div class="user-welcome">Welcome, {st.session_state.name}!</div>', unsafe_allow_html=True)
 
 # Sidebar - User Profile
@@ -690,7 +690,3 @@ else:
     - Regular health check-ups
     - Enjoy your food and stay hydrated
     """)
-
-
-
-
