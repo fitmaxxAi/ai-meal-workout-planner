@@ -124,7 +124,7 @@ def generate_ai_meal(meal_type, calories, protein, carbs, fat, goal_type, health
             temperature=0.8
         )
         return response.choices[0].message['content'].strip()
-    except openai.error.AuthenticationError:
+    except openai.AuthenticationError:
         st.error("Invalid OpenAI API key. Check your secrets.toml or .env file.")
         return f"Template {meal_type} Meal"
     except Exception as e:
@@ -694,5 +694,6 @@ else:
     - Regular health check-ups
     - Enjoy your food and stay hydrated
     """)
+
 
 
