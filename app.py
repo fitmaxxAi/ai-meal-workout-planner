@@ -35,22 +35,17 @@ st.set_page_config(
 )
 
 # --- NEW: Load meals from GitHub CSV ---
-def load_meals_from_github():
+#def load_meals_from_github():
     """Loads meal data from a GitHub CSV file."""
     try:
-        # Use raw GitHub link (important!)
-        github_csv_url = "https://raw.githubusercontent.com/fitmaxxAi/ai-meal-workout-planner/main/meals.csv"
+        # Replace with your actual GitHub CSV URL
+        github_csv_url = "https://github.com/fitmaxxAi/ai-meal-workout-planner/blob/main/meals.csv"
         response = requests.get(github_csv_url)
         response.raise_for_status()  # Check for request errors
-
-        # Read CSV data while skipping problematic rows
-        meals_df = pd.read_csv(
-            StringIO(response.text),
-            sep=",",
-            on_bad_lines="skip",   # skip rows with errors
-            engine="python"        # more tolerant parser
-        )
-
+        
+        # Read CSV data
+        meals_df = pd.read_csv(StringIO(response.text))
+        
         # Convert to dictionary format for easier use
         meal_templates = {}
         for goal in meals_df['goal_type'].unique():
@@ -61,9 +56,8 @@ def load_meals_from_github():
                 'Dinner': goal_meals[goal_meals['meal_type'] == 'Dinner']['meal_name'].iloc[0],
                 'Snack': goal_meals[goal_meals['meal_type'] == 'Snack']['meal_name'].iloc[0]
             }
-
+        
         return meal_templates
-
     except Exception as e:
         st.error(f"Error loading meals from GitHub: {e}")
         # Fallback to default templates
@@ -721,9 +715,6 @@ else:
     - Regular health check-ups
     - Enjoy your food and stay hydrated
     """)
-
-
-
 
 
 
