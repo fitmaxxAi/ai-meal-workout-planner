@@ -32,13 +32,7 @@ def load_meals_from_github():
         response.raise_for_status()  # Check for request errors
         
         # Read CSV data
-        meals_df = pd.read_csv(
-    StringIO(response.text),
-    sep=",",
-    on_bad_lines="skip",   # skip problematic lines
-    engine="python"        # more flexible parser
-)
-
+        meals_df = pd.read_csv(StringIO(response.text))
         
         # Convert to dictionary format for easier use
         meal_templates = {}
@@ -700,6 +694,4 @@ else:
     - Regular health check-ups
     - Enjoy your food and stay hydrated
     """)
-
-
 
