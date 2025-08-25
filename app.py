@@ -3,28 +3,10 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import random
-import json
-import openai
-from dotenv import load_dotenv
-import os
-import requests
-from io import StringIO
-import streamlit as st
-from openai import OpenAI
-
-# Initialize OpenAI client (add this after imports)
-if "openai_client" not in st.session_state:
-    try:
-        from openai import OpenAI
-        st.session_state.openai_client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-    except KeyError:
-        st.error("❌ OPENAI_API_KEY not found in secrets. Please check your secrets.toml file")
-        st.stop()
-    except Exception as e:
-        st.error(f"❌ Failed to initialize OpenAI client: {e}")
-        st.stop()
-
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+import json  # <-- NEW IMPORT for data persistence
+import openai  # <-- NEW IMPORT for AI features
+from dotenv import load_dotenv # <-- NEW IMPORT for API keys
+import os # <-- NEW IMPORT for API keys
 
 # Page configuration
 st.set_page_config(
@@ -34,55 +16,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- NEW: Load meals from GitHub CSV ---
-def load_meals.csv_from_github():
-    """Loads meal data from a GitHub CSV file."""
-    try:
-        # Replace with your actual GitHub CSV URL
-        github_csv_url = "https://github.com/fitmaxxAi/ai-meal-workout-planner/blob/main/meals.csv"
-        response = requests.get(github_csv_url)
-        response.raise_for_status()  # Check for request errors
-        
-        # Read CSV data
-        meals.csv_df = pd.read_csv(StringIO(response.text))
-        
-        # Convert to dictionary format for easier use
-        meal_templates = {}
-        for goal in meals.csv_df['goal_type'].unique():
-            goal_meals = meals.csv_df[meals_df['goal_type'] == goal]
-            meal_templates[goal] = {
-                'Breakfast': goal_meals[goal_meals['meal_type'] == 'Breakfast']['meal_name'].iloc[0],
-                'Lunch': goal_meals[goal_meals['meal_type'] == 'Lunch']['meal_name'].iloc[0],
-                'Dinner': goal_meals[goal_meals['meal_type'] == 'Dinner']['meal_name'].iloc[0],
-                'Snack': goal_meals[goal_meals['meal_type'] == 'Snack']['meal_name'].iloc[0]
-            }
-        
-        return meal_templates
-    except Exception as e:
-        st.error(f"Error loading meals from GitHub: {e}")
-        # Fallback to default templates
-        return {
-            'Weight Loss': {
-                'Breakfast': 'Greek Yogurt with Berries and Chia Seeds',
-                'Lunch': 'Grilled Chicken Salad with Quinoa',
-                'Dinner': 'Baked Salmon with Roasted Vegetables',
-                'Snack': 'Apple with Almond Butter'
-            },
-            'Weight Gain': {
-                'Breakfast': 'Oatmeal with Banana and Peanut Butter',
-                'Lunch': 'Beef and Vegetable Stir-fry with Rice',
-                'Dinner': 'Chicken with Sweet Potato and Avocado',
-                'Snack': 'Protein Shake with Oats'
-            },
-            'Weight Maintenance': {
-                'Breakfast': 'Whole Grain Toast with Eggs and Avocado',
-                'Lunch': 'Turkey and Hummus Wrap with Side Salad',
-                'Dinner': 'Fish with Quinoa and Steamed Vegetables',
-                'Snack': 'Greek Yogurt with Nuts'
-            }
-        }
-
-# --- Load user data from JSON file ---
+# --- NEW FUNCTION: Load user data from JSON file ---
 def load_user_data():
     """Loads user data from a JSON file if it exists."""
     try:
@@ -92,9 +26,10 @@ def load_user_data():
     except FileNotFoundError:
         return None
 
-# --- Save user data to JSON file ---
+# --- NEW FUNCTION: Save user data to JSON file ---
 def save_user_data():
     """Saves the current session state to a JSON file."""
+    # Define which keys we want to persist
     keys_to_save = [
         'name', 'age', 'gender', 'height', 'current_weight', 'goal_weight',
         'activity_level', 'goal_type', 'health_condition', 'water_intake',
@@ -106,6 +41,7 @@ def save_user_data():
     with open('user_data.json', 'w') as f:
         json.dump(data_to_save, f)
 
+# --- NEW FUNCTION: AI-Powered Meal Generation ---
 def generate_ai_meal(meal_type, calories, protein, carbs, fat, goal_type, health_condition):
     """
     Uses OpenAI's API to generate a creative meal idea based on parameters.
@@ -121,37 +57,28 @@ def generate_ai_meal(meal_type, calories, protein, carbs, fat, goal_type, health
 
     Example: 'Mediterranean Chickpea Salad: Fresh chickpeas with cucumber, cherry tomatoes, feta cheese, kalamata olives, and a lemon-oregano vinaigrette.'
     """
-    
     try:
-        # Use the client from session state (modern approach)
-        client = st.session_state.openai_client
-        
-        # Call the OpenAI API with the new syntax
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+        # Check if the API key is configured
+        if not openai.api_key:
+            st.error("OpenAI API key not configured. Using template meals.")
+            return f"Template {meal_type} Meal"
+            
+        # Call the OpenAI API
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Use 'gpt-4' for even better results if you have access
             messages=[{"role": "user", "content": prompt}],
             max_tokens=75,
-            temperature=0.8
+            temperature=0.8  # For more creativity
         )
-        return response.choices[0].message.content.strip()
-        
-    except openai.AuthenticationError:
-        st.error("❌ Invalid OpenAI API key. Check your secrets.toml file.")
-        return get_default_meal(meal_type)
+        return response.choices[0].message['content'].strip()
+    except openai.error.AuthenticationError:
+        st.error("Invalid OpenAI API key. Check your secrets.toml or .env file.")
+        return f"Template {meal_type} Meal"
     except Exception as e:
-        st.error(f"⚠️ An error occurred with AI generation: {e}")
-        return get_default_meal(meal_type)
+        st.error(f"An error occurred with AI generation: {e}")
+        # Fallback to template
+        return f"Template {meal_type} Meal"
 
-def get_default_meal(meal_type):
-    """Fallback meals if AI generation fails"""
-    default_meals = {
-        "breakfast": "Oatmeal with Berries: Classic oatmeal topped with fresh berries and nuts (350 cal, 12g protein)",
-        "lunch": "Grilled Chicken Salad: Mixed greens with grilled chicken and vinaigrette (450 cal, 35g protein)", 
-        "dinner": "Baked Salmon with Vegetables: Salmon fillet with steamed broccoli and quinoa (500 cal, 40g protein)",
-        "snack": "Greek Yogurt with Honey: Protein-rich yogurt with a touch of honey (200 cal, 15g protein)"
-    }
-    return default_meals.get(meal_type, "Healthy Balanced Meal")
-    
 # Custom CSS for modern UI
 st.markdown("""
 <style>
@@ -225,15 +152,14 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- Load API Key from Secrets/Environment ---
+# --- NEW: Load API Key from Secrets/Environment ---
+# Try to load from Streamlit secrets (for deployment)
 try:
     openai.api_key = st.secrets["OPENAI_API_KEY"]
 except (KeyError, FileNotFoundError):
+    # If not in secrets, try to load from .env file (for local development)
     load_dotenv()
     openai.api_key = os.getenv("OPENAI_API_KEY")
-
-# --- NEW: Load meal templates from GitHub ---
-meal_templates = load_meals_from_github()
 
 # Initialize session state
 def initialize_session_state():
@@ -257,12 +183,13 @@ def initialize_session_state():
         'meals': [],
         'workouts': [],
         'exercises': [],
-        'use_ai_meals': False
+        'use_ai_meals': False  # <-- NEW: Toggle for AI meal generation
     }
     
-    # Try to load saved data first
+    # --- NEW: Try to load saved data first ---
     saved_data = load_user_data()
     if saved_data:
+        # Load all saved values, use defaults if any key is missing
         for key in default_data.keys():
             if key in saved_data:
                 st.session_state[key] = saved_data[key]
@@ -270,12 +197,13 @@ def initialize_session_state():
                 st.session_state[key] = default_data[key]
         st.sidebar.success("Loaded saved data!")
     else:
+        # First time user, initialize with defaults
         for key, value in default_data.items():
             st.session_state[key] = value
 
 initialize_session_state()
 
-# Helper functions
+# Helper functions (Keep your existing calculate_bmr, calculate_tdee, etc.)
 def calculate_bmr(weight, height, age, gender):
     if gender == 'Male':
         return 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
@@ -351,9 +279,31 @@ def get_food_recommendations(goal_type, health_condition):
     
     return base_recommendations + health_recommendations
 
-# --- UPDATED: Now uses AI if toggle is on, otherwise uses CSV meals ---
+# --- UPDATED FUNCTION: Now uses AI if toggle is on ---
 def generate_meal_plan(calorie_target, macro_targets, goal_type, health_condition):
     meals = []
+    meal_templates = {
+        'Weight Loss': {
+            'Breakfast': 'Greek Yogurt with Berries and Chia Seeds',
+            'Lunch': 'Grilled Chicken Salad with Quinoa',
+            'Dinner': 'Baked Salmon with Roasted Vegetables',
+            'Snack': 'Apple with Almond Butter'
+        },
+        'Weight Gain': {
+            'Breakfast': 'Oatmeal with Banana and Peanut Butter',
+            'Lunch': 'Beef and Vegetable Stir-fry with Rice',
+            'Dinner': 'Chicken with Sweet Potato and Avocado',
+            'Snack': 'Protein Shake with Oats'
+        },
+        'Weight Maintenance': {
+            'Breakfast': 'Whole Grain Toast with Eggs and Avocado',
+            'Lunch': 'Turkey and Hummus Wrap with Side Salad',
+            'Dinner': 'Fish with Quinoa and Steamed Vegetables',
+            'Snack': 'Greek Yogurt with Nuts'
+        }
+    }
+    
+    template = meal_templates.get(goal_type, meal_templates['Weight Maintenance'])
     distributions = {'Breakfast': 0.25, 'Lunch': 0.35, 'Dinner': 0.30, 'Snack': 0.10}
     
     for meal_type, distribution in distributions.items():
@@ -362,7 +312,7 @@ def generate_meal_plan(calorie_target, macro_targets, goal_type, health_conditio
         meal_carbs = round(macro_targets['carbs_target'] * distribution)
         meal_fat = round(macro_targets['fat_target'] * distribution)
         
-        # Use AI or template based on toggle
+        # --- NEW: Use AI or template based on toggle ---
         if st.session_state.use_ai_meals:
             with st.spinner(f'🤖 AI is crafting your {meal_type}...'):
                 meal_name = generate_ai_meal(
@@ -370,8 +320,6 @@ def generate_meal_plan(calorie_target, macro_targets, goal_type, health_conditio
                     goal_type, health_condition
                 )
         else:
-            # Use the meal from CSV/GitHub
-            template = meal_templates.get(goal_type, meal_templates['Weight Loss'])
             meal_name = template[meal_type]
         
         meals.append({
@@ -474,7 +422,7 @@ with st.sidebar:
                                       index=["Healthy", "Diabetes", "Hypertension", "Heart Condition"].index(st.session_state.health_condition))
         fitness_level = st.selectbox("Fitness Level", ["Beginner", "Intermediate", "Advanced"], index=0)
         
-        # Toggle for AI Meals
+        # --- NEW: Toggle for AI Meals ---
         use_ai = st.checkbox("Use AI for Meal Ideas 🤖", value=st.session_state.use_ai_meals)
         
         if st.form_submit_button("🚀 Update Profile & Generate Plan"):
@@ -483,7 +431,7 @@ with st.sidebar:
                 'current_weight': current_weight, 'goal_weight': goal_weight,
                 'activity_level': activity_level, 'goal_type': goal_type,
                 'health_condition': health_condition,
-                'use_ai_meals': use_ai
+                'use_ai_meals': use_ai  # <-- Save the toggle state
             })
             
             # Recalculate everything
@@ -507,7 +455,7 @@ with st.sidebar:
             if today_workout:
                 st.session_state.exercises = generate_exercises(today_workout['type'])
             
-            # Save the updated data
+            # --- NEW: Save the updated data ---
             save_user_data()
             st.success("Profile updated and saved successfully!")
 
@@ -520,21 +468,22 @@ with st.sidebar:
         if food_name and food_calories > 0:
             st.session_state.food_log.append({'name': food_name, 'calories': food_calories})
             st.session_state.daily_calories += food_calories
-            save_user_data()
+            save_user_data()  # <-- NEW: Save after adding food
             st.success(f"Added {food_name} ({food_calories} kcal)")
     
     st.metric("Today's Calories", f"{st.session_state.daily_calories} / {st.session_state.calorie_target}")
     progress = min(1.0, st.session_state.daily_calories / st.session_state.calorie_target)
     st.progress(progress)
     
-    # Button to reset daily calories
+    # --- NEW: Button to reset daily calories (e.g., for a new day) ---
     if st.button("🔁 Reset Daily Log"):
         st.session_state.daily_calories = 0
         st.session_state.food_log = []
         save_user_data()
         st.success("Daily log reset!")
 
-# Main content - Tabs
+# ... [The rest of your code for tabs (Dashboard, Nutrition, Workouts, Progress) remains exactly the same] ...
+# Main content - Tabs for better organization
 tab1, tab2, tab3, tab4 = st.tabs(["🏠 Dashboard", "🍽️ Nutrition", "💪 Workouts", "📊 Progress"])
 
 with tab1:
@@ -715,9 +664,6 @@ else:
     - Regular health check-ups
     - Enjoy your food and stay hydrated
     """)
-
-
-
 
 
 
