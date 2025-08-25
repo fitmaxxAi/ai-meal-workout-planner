@@ -35,7 +35,7 @@ st.set_page_config(
 )
 
 # --- NEW: Load meals from GitHub CSV ---
-#def load_meals_from_github():
+def load_meals_from_github():
     """Loads meal data from a GitHub CSV file."""
     try:
         # Replace with your actual GitHub CSV URL
@@ -715,6 +715,7 @@ else:
     - Regular health check-ups
     - Enjoy your food and stay hydrated
     """)
+
 
 
 
