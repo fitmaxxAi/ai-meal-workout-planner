@@ -36,8 +36,8 @@ def load_meals_from_github():
         
         # Convert to dictionary format for easier use
         meal_templates = {}
-        for goal in meals.csv_df['goal_type'].unique():
-            goal_meals = meals.csv_df[meals_df['goal_type'] == goal]
+        for goal in meals_df['goal_type'].unique():
+            goal_meals = meals_df[meals_df['goal_type'] == goal]
             meal_templates[goal] = {
                 'Breakfast': goal_meals[goal_meals['meal_type'] == 'Breakfast']['meal_name'].iloc[0],
                 'Lunch': goal_meals[goal_meals['meal_type'] == 'Lunch']['meal_name'].iloc[0],
@@ -694,6 +694,7 @@ else:
     - Regular health check-ups
     - Enjoy your food and stay hydrated
     """)
+
 
 
 
